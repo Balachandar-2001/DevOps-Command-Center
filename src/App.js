@@ -1,23 +1,63 @@
-import logo from './logo.svg';
-import './App.css';
+import "./App.css";
+
+const technologies = [
+  "React",
+  "Docker",
+  "Jenkins",
+  "SonarQube",
+  "Trivy",
+  "AWS",
+  "Kubernetes",
+  "Prometheus",
+  "Grafana",
+];
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+    <div className="container">
+      <header>
+        <h1>🚀 DevOps Command Center</h1>
+        <p>Production CI/CD Demo Project</p>
       </header>
+
+      <section className="card">
+        <h2>Application Details</h2>
+
+        <div className="info">
+          <p>
+            <strong>Application:</strong> React DevOps Demo
+          </p>
+
+          <p>
+            <strong>Version:</strong> v1.0.0
+          </p>
+
+          <p>
+            <strong>Environment:</strong> Development
+          </p>
+
+          <p>
+            <strong>Status:</strong>
+            <span className="status"> 🟢 Healthy</span>
+          </p>
+        </div>
+      </section>
+
+      <section className="card">
+        <h2>Technology Stack</h2>
+
+        <div className="tech-grid">
+          {technologies.map((tech) => (
+            <div key={tech} className="tech-card">
+              {tech}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <footer>
+        <p>© 2026 DevOps Command Center</p>
+      </footer>
     </div>
   );
 }
