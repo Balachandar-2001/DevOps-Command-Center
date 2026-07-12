@@ -3,6 +3,7 @@ pipeline {
     
     environment {
         IMAGE_NAME = "30balachandar333/react-devops-demo"
+        SCANNER_HOME = tool 'SonarScanner'
     }
 
     stages {
@@ -23,6 +24,28 @@ pipeline {
         stage('Build React App') {
             steps {
                 sh 'npm run build'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                 withSonarQubeEnv('SonarQube') {
+                    sh """
+                          ${SCANNER_HOME}/bin/sonar-scanner \
+                            -Dsonar.projectKey=react-app \
+                            -Dsonar.projectName=react-app \
+                            -Dsonar.sources=. \
+                            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+                        """
+                 }
+            }
+        }
+
+        stage('Quality Gate') {
+            steps {
+                    timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
             }
         }
         
