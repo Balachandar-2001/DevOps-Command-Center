@@ -60,7 +60,7 @@ pipeline {
                     --scan . \
                     --format XML \
                     --format HTML \
-                    --out dependency-check-report
+                    --out dependency-check-report \
                     --disableYarnAudit
                 """
             }
