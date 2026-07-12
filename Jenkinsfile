@@ -54,6 +54,7 @@ pipeline {
             steps {
                 sh """
                 docker push ${IMAGE_NAME}:${BUILD_NUMBER}
+                docker push ${IMAGE_NAME}:latest
                 """
             }
         }
