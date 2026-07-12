@@ -16,12 +16,12 @@ function App() {
   return (
     <div className="container">
       <header>
-        <h1>🚀 DevOps Command Center</h1>
+        <h1>🚀 DevOps Command Centerrr</h1>
         <p>Production CI/CD Demo Project</p>
       </header>
 
       <section className="card">
-        <h2>Application Detailsssssssssaaar</h2>
+        <h2>Application Details</h2>
 
         <div className="info">
           <p>
