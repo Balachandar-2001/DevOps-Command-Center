@@ -4,6 +4,7 @@ pipeline {
     environment {
         IMAGE_NAME = "30balachandar333/react-devops-demo"
         SCANNER_HOME = tool 'SonarScanner'
+        DEP_CHECK = tool 'DependencyCheck'
     }
 
     stages {
@@ -46,6 +47,25 @@ pipeline {
                     timeout(time: 5, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
                 }
+            }
+        }
+
+        stage('OWASP Dependency Check') {
+            steps {
+                sh """
+                    ${DEP_CHECK}/bin/dependency-check.sh \
+                    --project React-App \
+                    --scan . \
+                    --format XML \
+                    --format HTML \
+                    --out dependency-check-report
+                """
+            }
+        }
+
+        stage('Publish OWASP Report') {
+            steps {
+                dependencyCheckPublisher pattern: 'dependency-check-report/dependency-check-report.xml'
             }
         }
         
@@ -116,6 +136,7 @@ pipeline {
     }
     post {
         always {
+            archiveArtifacts artifacts: 'dependency-check-report/*.html'
             cleanWs()
         }
 
