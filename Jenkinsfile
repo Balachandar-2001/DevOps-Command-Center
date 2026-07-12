@@ -139,7 +139,7 @@ pipeline {
     }
     post {
         always {
-            archiveArtifacts artifacts: 'dependency-check-report/*', fingerprint: true
+            archiveArtifacts artifacts: 'dependency-check-report/*'
             cleanWs()
         }
 
