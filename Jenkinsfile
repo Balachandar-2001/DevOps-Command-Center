@@ -73,8 +73,8 @@ pipeline {
             steps {
                     sh """
                     trivy image ${IMAGE_NAME}:${BUILD_NUMBER} \
-                    --format html \
-                    --output trivy-report.html
+                    --format table \
+                    --severity HIGH,CRITICAL
                     """
                 }
         }
