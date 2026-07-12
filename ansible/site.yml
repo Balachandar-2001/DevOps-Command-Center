@@ -1,0 +1,10 @@
+---
+- hosts: jenkins
+  become: yes
+
+  roles:
+    - common
+    - docker
+    - kubernetes
+    - monitoring
+    - deploy

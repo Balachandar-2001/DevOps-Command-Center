@@ -1,0 +1,10 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for roles/deploy
+- name: Update React application image
+  command: >
+    kubectl set image deployment/react-app
+    react-app={{ image_name }}:{{ image_tag }}
+
+- name: Wait for rollout
+  command: kubectl rollout status deployment/react-app
