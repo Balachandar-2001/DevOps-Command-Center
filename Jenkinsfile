@@ -4,7 +4,7 @@ pipeline {
     environment {
         IMAGE_NAME = "30balachandar333/react-devops-demo"
         SCANNER_HOME = tool 'SonarScanner'
-        DEP_CHECK = tool 'DependencyCheck'
+        DEPENDENCY_CHECK_HOME = tool 'DependencyCheck'
     }
 
     stages {
@@ -53,7 +53,9 @@ pipeline {
         stage('OWASP Dependency Check') {
             steps {
                 sh """
-                    ${DEP_CHECK}/bin/dependency-check.sh \
+                    mkdir -p dependency-check-report
+
+                    ${DEPENDENCY_CHECK_HOME}/bin/dependency-check.sh \
                     --project React-App \
                     --scan . \
                     --format XML \
@@ -136,7 +138,7 @@ pipeline {
     }
     post {
         always {
-            archiveArtifacts artifacts: 'dependency-check-report/*.html'
+            archiveArtifacts artifacts: 'dependency-check-report/*', fingerprint: true
             cleanWs()
         }
 
