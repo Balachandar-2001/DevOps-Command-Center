@@ -21,7 +21,7 @@ function App() {
       </header>
 
       <section className="card">
-        <h2>Application Detailsssssssss</h2>
+        <h2>Application Detailsssssssssaaar</h2>
 
         <div className="info">
           <p>
