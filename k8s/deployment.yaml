@@ -18,5 +18,6 @@ spec:
       containers:
       - name: react-app
         image: 30balachandar333/react-devops-demo:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 80
