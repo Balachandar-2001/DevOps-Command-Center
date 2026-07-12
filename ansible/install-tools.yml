@@ -1,0 +1,14 @@
+---
+- hosts: jenkins
+  become: yes
+
+  tasks:
+    - name: Install Git
+      apt:
+        name: git
+        state: present
+
+    - name: Install Curl
+      apt:
+        name: curl
+        state: present
