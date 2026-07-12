@@ -117,7 +117,6 @@ pipeline {
     post {
         always {
             cleanWs()
-            archiveArtifacts artifacts: 'trivy-report.html', fingerprint: true
         }
 
         success {
