@@ -58,6 +58,26 @@ pipeline {
                 """
             }
         }
+
+        stage('Trivy Filesystem Scan') {
+            steps {
+                sh '''
+                  trivy fs . \
+                 --format table \
+                 --severity HIGH,CRITICAL
+                '''
+            }
+        }
+
+        stage('Trivy Image Scan') {
+            steps {
+                    sh """
+                    trivy image ${IMAGE_NAME}:${BUILD_NUMBER} \
+                    --format html \
+                    --output trivy-report.html
+                    """
+                }
+        }
         
         stage('Docker Login') {
             steps {
@@ -97,6 +117,7 @@ pipeline {
     post {
         always {
             cleanWs()
+            archiveArtifacts artifacts: 'trivy-report.html', fingerprint: true
         }
 
         success {
