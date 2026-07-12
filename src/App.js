@@ -16,7 +16,7 @@ function App() {
   return (
     <div className="container">
       <header>
-        <h1>🚀 DevOps Command Centerrr</h1>
+        <h1>🚀 DevOps Command Center</h1>
         <p>Production CI/CD Demo Project</p>
       </header>
 
