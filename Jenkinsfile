@@ -59,12 +59,14 @@ pipeline {
             }
         }
 
-        stage('Deploy to EKS') {
+        stage('Deploy to Kubernetes') {
             steps {
-                sh '''
-                    kubectl apply -f k8s/
+                sh """
+                    kubectl set image deployment/react-app \
+                    react-app=${IMAGE_NAME}:${BUILD_NUMBER}
+
                     kubectl rollout status deployment/react-app
-                '''
+                """
             }
         }
 
