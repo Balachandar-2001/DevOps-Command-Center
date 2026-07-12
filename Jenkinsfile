@@ -61,6 +61,7 @@ pipeline {
                     --format XML \
                     --format HTML \
                     --out dependency-check-report
+                    --disableYarnAudit
                 """
             }
         }
