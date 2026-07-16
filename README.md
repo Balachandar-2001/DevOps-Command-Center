@@ -1,70 +1,108 @@
-# Getting Started with Create React App
+# DevOps Command Center
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A complete, reproducible operational setup for a self-hosted CI/CD platform — covering infrastructure provisioning, a DevSecOps pipeline, cluster monitoring, and disaster recovery runbooks. The React app in this repo is a deliberately minimal demo application whose purpose is to exercise the full pipeline end to end, not a product in itself.
 
-## Available Scripts
+## Why this exists
 
-In the project directory, you can run:
+Most CI/CD demo projects stop at "build → deploy." This one goes further: it treats the DevOps platform itself as something that needs to be provisioned, monitored, secured, and — critically — recovered when it breaks. The repo doubles as an operational runbook, not just a pipeline definition.
 
-### `npm start`
+## Architecture
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+```
+GitHub (push/webhook)
+   │
+   ▼
+Jenkins  ──▶  npm install & build
+   │
+   ▼
+SonarQube (static analysis + quality gate)
+   │
+   ▼
+OWASP Dependency Check (dependency vulnerability scan)
+   │
+   ▼
+Docker build
+   │
+   ▼
+Trivy (container image scan)
+   │
+   ▼
+Docker push → Docker Hub
+   │
+   ▼
+Ansible deploy (deploy.yml) ──▶ Kubernetes (deployment.yaml / service.yaml)
+   │
+   ▼
+Prometheus + Grafana (kube-prometheus-stack via Helm)
+```
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Repo structure
 
-### `npm test`
+| Path | Purpose |
+|---|---|
+| `Jenkinsfile` | CI/CD pipeline definition (build → scan → deploy stages above) |
+| `Dockerfile` | Container build for the demo React app |
+| `ansible/site.yml` | Provisions Jenkins EC2 host and Kubernetes nodes; installs required tooling |
+| `ansible/install-tools.yml` | Installs Java, Git, Docker, Jenkins, kubectl, Helm, AWS CLI, Trivy, Sonar Scanner, OWASP Dependency Check |
+| `ansible/docker.yml` | Docker installation/configuration role |
+| `ansible/kubernetes.yml` | Cluster init, worker join, kubectl configuration |
+| `ansible/monitoring.yml` | Installs kube-prometheus-stack via Helm, exposes Grafana via LoadBalancer |
+| `ansible/inventory.ini` | Target host inventory for all playbooks |
+| `k8s/deployment.yaml`, `k8s/service.yaml` | Kubernetes manifests for the demo app |
+| `src/` | Demo React application (Create React App) — deployment target for the pipeline, not the point of the project |
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Pipeline stages, in detail
 
-### `npm run build`
+1. **Checkout** — Jenkins pulls from GitHub via webhook trigger.
+2. **Build** — `npm install` and production build of the React app.
+3. **Static analysis** — SonarQube scan with a configured quality gate; the build fails if the gate isn't met.
+4. **Dependency scan** — OWASP Dependency Check flags known-vulnerable dependencies.
+5. **Containerize** — Docker image build.
+6. **Image scan** — Trivy scans the built image for OS and library vulnerabilities before it's allowed to ship.
+7. **Publish** — Image pushed to Docker Hub.
+8. **Deploy** — Ansible's `deploy.yml` applies the Kubernetes deployment using `image_name`/`image_tag` variables, so any built image can be rolled out without editing manifests by hand.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Monitoring
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+`kube-prometheus-stack` is installed via Helm across the cluster. Grafana is exposed through a LoadBalancer service for real-time visibility into cluster and application health — no manual dashboard wiring required.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Disaster recovery runbooks
 
-### `npm run eject`
+This project treats "the platform itself can fail" as a first-class scenario, not an afterthought:
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+| Scenario | Recovery steps |
+|---|---|
+| Jenkins host lost | Launch new EC2 instance → clone repo → install Ansible → run `site.yml` → restore Jenkins configuration → redeploy app |
+| Kubernetes pods lost | Run `ansible-playbook deploy.yml` or re-trigger the Jenkins pipeline |
+| Kubernetes cluster lost | Recreate cluster → reconfigure `kubectl` → run `site.yml` → redeploy app |
+| Entire infrastructure lost | Recreate servers → reconfigure cluster → run `site.yml` → restore Jenkins → redeploy app |
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Useful commands
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+```bash
+kubectl get nodes
+kubectl get pods -A
+kubectl get svc
+kubectl rollout status deployment/react-app
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+docker images
+trivy image <image>
 
-## Learn More
+ansible-playbook -i inventory.ini site.yml
+ansible-playbook -i inventory.ini deploy.yml --extra-vars "image_name=<image> image_tag=<tag>"
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Roadmap
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+- Jenkins Configuration as Code
+- ArgoCD for GitOps-based delivery
+- Terraform for infrastructure provisioning (replacing manual EC2/cluster setup)
+- Vault for secrets management
+- Loki + Promtail + Tempo for log and trace aggregation alongside existing metrics
+- HPA / Cluster Autoscaler / KEDA for autoscaling
+- Istio service mesh
 
-### Code Splitting
+## Notes
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- The demo application under `src/` is unmodified Create React App scaffolding, used only as a build/deploy target for the pipeline.
+- Built and documented by [Balachandar R](https://linkedin.com/in/balachandarr).
